@@ -1,5 +1,3 @@
-# ml GCC/10.2.0 OpenMPI/4.0.5 R/4.0.5; R
-# cd ~/script/xuyue/covid19_drug_reposition/log
 
 ##################################################____load packages____####################################################
 library(readxl)
