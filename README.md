@@ -2,9 +2,9 @@
 ## Introduction
 To quantify the extent of reversal on disease of a specific drug, we used the cosine similarity metric. For a given disease, we first represent the set of disease signature as a vector in a high-dimensional space (whose dimension n is the total number of genes) with each nonzero element of the vector given by a disease-associated gene. The disease signature can be derived from either TWAS or DGE. The vector for each candidate drug is embedded in the same n-dimensional space. For each disease signature vector and drug response profile pair, we compute the reversal distance. Reversal distance measures a drug's ability to counteract disease-related gene expression. A positive value suggests potential preventive or therapeutic effects, while a negative value indicates the drug may worsen the disease. A higher positive reversal distance suggests a stronger counteracting effect. Let $\vec{G}$ denote a disease signature vector, $\vec{D}$ a drug profile vector, and $rd$ the reversal distance. The $rd$ quantifies the potential effect of the drug in reversing the disease signatures:
 
-$$\omega :=\; \cos\theta =\; \frac{\vec{G} \cdot \vec{D}}{||\vec{G}|| \cdot ||\vec{D}||} \tag{1}$$
+$$\omega \;:=\; \cos\theta =\; \frac{\vec{G} \cdot \vec{D}}{||\vec{G}|| \cdot ||\vec{D}||} \tag{1}$$
 
-$$rd =\; \|\vec{G}\| \cdot \cos(\pi - \theta) \tag{2}$$
+$$rd \;=\; \|\vec{G}\| \cdot \cos(\pi - \theta) \tag{2}$$
 
 ## Workdir
 - TReS/data/DGE_rs/ : save the DGE results and processed DGE results;  
