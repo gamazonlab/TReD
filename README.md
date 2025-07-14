@@ -25,7 +25,7 @@ Liver: data/disease_signature/T2D/processed/twas_Adipose_Visceral_Omentum_new.Rd
 Pancreas: data/disease_signature/T2D/processed/twas_Adipose_Visceral_Omentum_new.Rdata
 
 ### TWAS Tool
-Predixcan(https://www.nature.com/articles/ng.3367, https://github.com/gamazonlab/MR-JTI/blob/master/model_training/predixcan/)
+Predixcan (https://www.nature.com/articles/ng.3367, https://github.com/gamazonlab/MR-JTI/blob/master/model_training/predixcan/)
 
 ### DGE
 1. Covid19  
