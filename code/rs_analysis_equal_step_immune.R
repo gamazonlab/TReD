@@ -42,9 +42,9 @@ getFocusedCellLines = function(dataset){
 analyze_rs = function(phenotype_id = 1, method_id = 2){
     phenotype = c('T2D', 'Covid19')[phenotype_id]
     method = c('TReD', 'cmap_score')[method_id]
-    work_dir = '/data/projects/xuy/covid19_drug_reposition/compound_d_immune_equal_step/'
-    annotation_df = xy_read("/data/projects/xuy/covid19_drug_reposition/compound_d_immune_equal_step/annotation_df.txt")
-    siginfo_beta = xy_read('/data/shared_data/LINCS2/siginfo_beta.txt')
+    work_dir = 'your_work_path/covid19_drug_reposition/compound_d_immune_equal_step/'
+    annotation_df = xy_read("~/LINCS2_beta/annotation_df.txt")
+    siginfo_beta = xy_read('your_LINCS_path/siginfo_beta.txt')
     datasets = as.character(unlist(get_run_datasets(phenotype)))
     
     # 'immune' means results of focused cell lines
@@ -152,28 +152,3 @@ analyze_rs = function(phenotype_id = 1, method_id = 2){
     print('OK!')
 }
 
-
-
-
-
-##### intersect
-d_all_rs = all_sub_immune_drug_rs_cell
-inter_dt = data.frame()
-inter_num = data.frame()
-for (i in 1:6){
-    i_dataset = datasets[i]
-    for (j in (i+1):7){
-        j_dataset = datasets[j]
-        i_drug = d_all_rs[d_all_rs$data_set == i_dataset, ][['common_name']]
-        j_drug = d_all_rs[d_all_rs$data_set == j_dataset, ][['common_name']]
-        inter_num[i_dataset, j_dataset] = length(intersect(i_drug, j_drug))
-        inter_dt[i_dataset, j_dataset] = gsub('[c()"]', '', paste(intersect(i_drug, j_drug), collapse = ',\n'))
-    }
-}
-write.table(inter_dt, file = 'inter_dt.csv', sep = ',', row.names = T)
-write.table(inter_num, file = 'inter_num.csv', sep = ',', row.names = T)
-
-### select instances with max d
-all_sub_bind_drug_instances_rs = all_sub_immune_drug_instances_rs %>% 
-    group_by(data_set) %>% group_by(pert_id) %>%
-    dplyr::slice(which.max(drug_d))
