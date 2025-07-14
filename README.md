@@ -12,13 +12,13 @@ wget https://s3.amazonaws.com/macchiato.clue.io/builds/LINCS2020/level5/level5_b
 
 ## Population Disease signature
 ### TWAS
-1. Covid19
+1. Covid19  
 blood: data/disease_signature/Covid19/processed/twas_blood_new.Rdata
 lung: data/disease_signature/Covid19/processed/twas_lung_new.Rdata  
 lymphocytes: data/disease_signature/Covid19/processed/twas_lymphocytes_new.Rdata  
 spleen: data/disease_signature/Covid19/processed/twas_spleen_new.Rdata
 
-2. T2D
+2. T2D  
 Adipose_Visceral_Omentum: data/disease_signature/T2D/processed/twas_Adipose_Visceral_Omentum_new.Rdata  
 Muscle_Skeletal: data/disease_signature/T2D/processed/twas_Adipose_Visceral_Omentum_new.Rdata  
 Liver: data/disease_signature/T2D/processed/twas_Adipose_Visceral_Omentum_new.Rdata  
