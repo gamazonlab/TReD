@@ -1,6 +1,6 @@
 
 # Introduction
-In this study, we proposed a drug reposition framework called “TReD” (Transcriptome-informed Reversal Distance) that embeds the disease signatures and drug response profiles in a high-dimensional normed space to quantify the reversal potential of candidate drugs in a disease-related cell-based screening.  
+In this study, we proposed a novel drug reposition framework based on cosine similarity called “TReD” (Transcriptome-informed Reversal Distance) that embeds the disease signatures and drug response profiles into a high-dimensional normed space to quantify the reversal potential of candidate drugs in a disease-related cell-based screening.  
 <img width="662" height="637" alt="image" src="https://github.com/user-attachments/assets/b8aee8df-2e52-4a3f-aec1-1e65007f6216" />
 
 
@@ -28,12 +28,12 @@ Pancreas: data/disease_signature/T2D/processed/twas_Adipose_Visceral_Omentum_new
 Predixcan(https://www.nature.com/articles/ng.3367, https://github.com/gamazonlab/MR-JTI/blob/master/model_training/predixcan/)
 
 ### DGE
-1. Covid19
+1. Covid19  
 ALV: data/disease_signature/Covid19/processed/dge_ALV_new.Rdata  
 EXP: data/disease_signature/Covid19/processed/dge_EXP_new.Rdata  
 BALF: data/disease_signature/Covid19/processed/dge_BALF_new.Rdata
 
-3. T2D
+2. T2D  
 islets: data/disease_signature/T2D/processed/dge_islets_new.Rdata  
 myoblasts: data/disease_signature/T2D/processed/dge_myoblasts_new.Rdata  
 myotubes: data/disease_signature/T2D/processed/dge_myotubes_new.Rdata  
