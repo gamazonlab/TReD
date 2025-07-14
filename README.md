@@ -1,5 +1,5 @@
 
-# Introduction
+# TReD
 In this study, we proposed a novel drug reposition framework based on cosine similarity called “TReD” (Transcriptome-informed Reversal Distance) that embeds the disease signatures and drug response profiles into a high-dimensional normed space to quantify the reversal potential of candidate drugs in a disease-related cell-based screening.  
 <img width="662" height="637" alt="image" src="https://github.com/user-attachments/assets/b8aee8df-2e52-4a3f-aec1-1e65007f6216" />
 
