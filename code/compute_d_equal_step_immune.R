@@ -7,7 +7,7 @@ library(foreach)
 library(doMC)
 registerDoMC(cores=max(detectCores() - 1, 1))
 
-source('~/Rwork/covid19_drug_reposition/functions.R')
+source('~/code/functions.R')
 
 
 ##################################################____define function____##################################################
@@ -178,11 +178,12 @@ pipeline = function(twas_sig_gene, compound_signatures, gene_list, method, datas
 main_fun = function(args, phenotype_id=1, method_id=1){
     phenotype = c('T2D', 'Covid19')[phenotype_id]
     method = c('TReD', 'cmap_score')[method_id]
-    work_path = '/data/projects/xuy/covid19_drug_reposition/'
+    work_path = 'your_work_path/covid19_drug_reposition/'
     
     ## load compound_signatures
-    gene_list = xy_read('/data/shared_data/LINCS2/parse_gctx/row.csv')
-    compound_signatures = xy_read(paste0('/data/shared_data/LINCS2/parse_gctx/exp_mat_', args, '.csv'))
+    gene_list = xy_read('your_LINCS_path/parse_gctx/row.csv')
+    # please download LINCS data and processed it according to /read_gctx
+    compound_signatures = xy_read(paste0('your_LINCS_path/parse_gctx/exp_mat_', args, '.csv'))
     row.names(compound_signatures) = gene_list$rid
     
     ## load cell name and select cell lines
