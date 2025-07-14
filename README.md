@@ -2,8 +2,17 @@
 ## Introduction
 In this study, we proposed a drug reposition framework called “TReD” (Transcriptome-informed Reversal Distance) that embeds the disease signatures and drug response profiles in a high-dimensional normed space to quantify the reversal potential of candidate drugs in a disease-related cell-based screening. 
 
+## Drug signature
+### LINCS
+
+
+## Population Disease signature
+### TWAS
+
+### DGE
+
 ## Workdir
-- TReS/data/DGE_rs/ : save the DGE results and processed DGE results;  
+- TReD/data/DGE_rs/ : save the DGE results and processed DGE results;  
   >prestored:
   > - ALV_DE.csv (derived from the study of Brian L. Le et al)
   > - BALF.csv (derived from the study of Brian L. Le et al)
