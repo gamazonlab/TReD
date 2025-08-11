@@ -59,6 +59,7 @@ myotubes: data/disease_signature/T2D/processed/dge_myotubes_new.Rdata
 3. code/rs_analysis_equal_step_immune.R: analyzing the screening results and searching for the potential drug for the disease
 4. code/read_gctx/read_cmap_gctx.py: parsing the GCTX file and splitting the huge dataset into 100 small subsets
 5. code/colocalization/covid19_result_for_coloc_leadsnp_200kbwindow.R: performing the colocalization analysis for Covid19
+6. code/predixcan/predixcan_r.r: script for running the PrediXcan
 
 
 
