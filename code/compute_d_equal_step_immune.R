@@ -5,16 +5,16 @@ library(foreach)
 library(doMC)
 registerDoMC(cores=max(detectCores() - 1, 1))
 
-source('~/code/functions.R')
+source('~/Rwork/covid19_drug_reposition/functions.R')
 
 
 ##################################################____define function____##################################################
-
-### compute_d: compute d between significant gene and pertubations
-## twas_sig_rs: a dataframe consisting of twas sig genes' geneid and rank, this rank is a ratio which represents the rank
-## drug_sig_rs: a dataframe of drug same as twas_sig_rs
-## return: reversal distance, d
 compute_d = function(twas_sig_rs, drug_sig_rs, method){
+    ### compute_d: compute d between significant gene and pertubations
+    ## twas_sig_rs: a dataframe consisting of twas sig genes' geneid and rank, this rank is a ratio which represents the rank
+    ## drug_sig_rs: a dataframe of drug same as twas_sig_rs
+    ## return: reversal distance, d
+    
     if (method == 'TReD'){
         twas_rank = twas_sig_rs$twas_rank - 0.5 # vector of twas rank
         drug_rank = drug_sig_rs$drug_rank - 0.5 # vector of drug rank
@@ -90,11 +90,12 @@ compute_d = function(twas_sig_rs, drug_sig_rs, method){
 }
 
 
-### pipeline: perform computing
-## twas_sig_rs: a dataframe consisting of twas sig genes' geneid and rank, this rank is a ratio which represents the rank
-## drug_sig_rs: a dataframe of drug same as twas_sig_rs
-## return: results
-pipeline = function(twas_sig_gene, compound_signatures, gene_list, method, dataset){
+pipeline = function(twas_sig_gene, compound_signatures, gene_list, method, dataset, add_experiment_wise_p){
+    ### pipeline: perform computing
+    ## twas_sig_rs: a dataframe consisting of twas sig genes' geneid and rank, this rank is a ratio which represents the rank
+    ## drug_sig_rs: a dataframe of drug same as twas_sig_rs
+    ## return: results
+    
     ### start computing rand_drug_d  
     print('start computing rand_drug_d')
     N_PERMUTATIONS <- 1000
@@ -112,6 +113,7 @@ pipeline = function(twas_sig_gene, compound_signatures, gene_list, method, datas
         null_drug_d_rand1000 = sapply(1:N_PERMUTATIONS, function(i){
             set.seed(i)
             temp_sig_rs$drug_rank = sample(temp_sig_rs$drug_rank, length(temp_sig_rs$drug_rank))
+            # temp_sig_rs$drug_rank = relevant_sample(temp_sig_rs, connected_genes)
             twas_sig_rs = subset(temp_sig_rs, select = c('GeneID', 'twas_rank'))
             drug_sig_rs = subset(temp_sig_rs, select = c('GeneID', 'drug_rank'))
             
@@ -134,7 +136,7 @@ pipeline = function(twas_sig_gene, compound_signatures, gene_list, method, datas
         # set.seed(2020)
         # temp_sig_rs$drug_rank = temp_sig_rs[sample(nrow(temp_sig_rs), nrow(temp_sig_rs), replace = F),'drug_rank']
 
-        twas_sig_rs = subset(temp_sig_rs, select = c('GeneID', 'twas_rank'))
+        twas_sig_rs = subset(temp_sig_rs, select = c('GeneID', 'twas_rank', 'effect'))
         drug_sig_rs = subset(temp_sig_rs, select = c('GeneID', 'drug_rank'))
         return(compute_d(twas_sig_rs, drug_sig_rs, method))
     })
@@ -150,113 +152,112 @@ pipeline = function(twas_sig_gene, compound_signatures, gene_list, method, datas
             return(length(which(rand_drug_d[[i]] >= d)) / length(rand_drug_d[[i]]))
         })
         
-        all_rand_drud_d = unlist(rand_drug_d)
-        result$experiment_wise_permutation_p = sapply(1:ncol(compound_signatures), function(i){
-            d = result$drug_d[i]
-            return(length(which(all_rand_drud_d >= d)) / length(all_rand_drud_d))
-        })
+        if (add_experiment_wise_p){
+            all_rand_drud_d = unlist(rand_drug_d)
+            result$experiment_wise_permutation_p = sapply(1:ncol(compound_signatures), function(i){
+                d = result$drug_d[i]
+                return(length(which(all_rand_drud_d >= d)) / length(all_rand_drud_d))
+            })
+        }
     } else{
         result$permutation_p = sapply(1:ncol(compound_signatures), function(i){
             d = result$drug_d[i]
             return(length(which(abs(rand_drug_d[[i]]) >= abs(d))) / length(rand_drug_d[[i]]))
         })
-        
-        all_rand_drud_d = unlist(rand_drug_d)
-        result$experiment_wise_permutation_p = sapply(1:ncol(compound_signatures), function(i){
-            d = result$drug_d[i]
-            return(length(which(abs(all_rand_drud_d) >= abs(d))) / length(all_rand_drud_d))
-        })
     }
     
-
     return(result)
 }
 
 
-main_fun = function(args, phenotype_id=1, method_id=1){
-    phenotype = c('T2D', 'Covid19')[phenotype_id]
+main_fun = function(args, phenotype_id, method_id){
+    phenotype = c('T2D', 'Covid19', 'AD')[phenotype_id]
     method = c('TReD', 'cmap_score')[method_id]
-    work_path = 'your_work_path/covid19_drug_reposition/'
-    
-    ## load compound_signatures
-    gene_list = xy_read('your_LINCS_path/parse_gctx/row.csv')
-    # please download LINCS data and processed it according to /read_gctx
-    compound_signatures = xy_read(paste0('your_LINCS_path/parse_gctx/exp_mat_', args, '.csv'))
-    row.names(compound_signatures) = gene_list$rid
-    
-    ## load cell name and select cell lines
-    # cell_name = as.character(sapply(colnames(compound_signatures), function(x) strsplit(x, "[_]")[[1]][2]))
-    # cell_focused = as.data.frame(read_excel('/data/g_gamazon_lab/zhoud2/covid19_drug_reposition/TWAS_rs/T2D/T2D_cmap_cellli_annot.xlsx'))
-    # compound_signatures = compound_signatures[, which(toupper(cell_name) %in% toupper(cell_focused$`cell line name`))]
+    work_path = '/data/projects/xuy/covid19_drug_reposition/'
+    add_experiment_wise_p = FALSE
     
     ## datasets
     datasets = get_run_datasets(phenotype)
     all_data_sets = c(datasets$TWAS, datasets$DGE)
+    dataset = all_data_sets[args]
+    print(dataset)
     
-    for (dataset_index in 1:length(all_data_sets)){
-        dataset = all_data_sets[dataset_index]
-        print(dataset)
+    for (j in 0:99){
+        ## load compound_signatures
+        gene_list = xy_read('/data/shared_data/LINCS2/parse_gctx/row.csv')
+        compound_signatures = xy_read(paste0('/data/shared_data/LINCS2/parse_gctx/exp_mat_', j, '.csv'))
+        row.names(compound_signatures) = gene_list$rid
         
-        output = paste0(work_path, 'compound_d_immune_equal_step/', phenotype, '/', method, '/', dataset, '/')
-        if(!dir.exists(output)){
-          dir.create(output)
-        }
-        rs_save_path = paste0(output, '/d_', args, '.txt')
-        if (!file.exists(rs_save_path)){
-            if (dataset %in% datasets$TWAS){
-                load(paste0(work_path, 'disease_signature/', phenotype, '/processed/twas_', dataset, '_new.Rdata'))
-                twas_rs = as.data.frame(twas_rs)
-                
-                # remove duplicated genes
-                twas_rs = twas_rs[order(twas_rs$padj), ]
-                twas_rs = twas_rs[!duplicated(twas_rs$gene), ]
-                
-                twas_rs$twas_rank = rank(-twas_rs$zscore) / (nrow(twas_rs)) 
-                twas_sig_gene = subset(twas_rs, padj < 0.05, select = c('GeneID', 'twas_rank'))
-            } else if (dataset %in% c('ALV', 'EXP', 'BALF')){
-                ## load dge sig gene list, to reuse twas's code, so named twas_sig_gene
-                load(paste0(work_path, 'disease_signature/', phenotype, '/processed/dge_', dataset, '_new.Rdata'))
-                dge_rs = as.data.frame(dge_rs)
-                
-                if (dataset == "BALF"){
-                    gene_name_col = 'symbol'
-                    fold_change_col = 'log2FoldChange'
-                } else{
-                    gene_name_col = 'GeneName'
-                    fold_change_col = 'log2FoldChange'
-                }
-                
-                # remove duplicated genes
-                dge_rs = dge_rs[order(abs(dge_rs[, fold_change_col]), decreasing = T), ]
-                dge_rs = dge_rs[!duplicated(dge_rs[, gene_name_col]), ]
-                
-                # use up to 50 gene for positive and negative
-                # positive = dge_rs[which(dge_rs[, fold_change_col]>0), ]
-                # negative = dge_rs[which(dge_rs[, fold_change_col]<0), ]
-                # min_size = min(nrow(positive), nrow(negative), 50)
-                # dge_rs = rbind(positive[1:min_size, ], negative[1:min_size, ])
-                # dge_rs = dge_rs[1:min(100, nrow(dge_rs)), ]
-                
-                twas_sig_gene = subset(dge_rs, select = c('GeneID', 'dge_rank'))
-                colnames(twas_sig_gene)[2] = 'twas_rank'
-            } else{
-                load(paste0(work_path, 'disease_signature/', phenotype, '/processed/dge_', dataset, '_new.Rdata'))
-                if (dataset == 'islets'){
-                    dge_rs$twas_rank = rank(-as.numeric(dge_rs$`Fold D/N`)) / (nrow(dge_rs)) 
-                    twas_sig_gene = subset(dge_rs, select = c('GeneID', 'twas_rank'))
-                } else{
-                    dge_rs$twas_rank = rank(-as.numeric(dge_rs$Ratio)) / (nrow(dge_rs)) 
-                    twas_sig_gene = subset(dge_rs, select = c('GeneID', 'twas_rank'))
-                }
+        ## load cell name and select cell lines
+        cell_name = as.character(sapply(colnames(compound_signatures), function(x) strsplit(x, "[_]")[[1]][2]))
+        cell_focused = getFocusedCellLines("Brain_Amygdala")
+        compound_signatures = compound_signatures[, which(toupper(cell_name) %in% toupper(cell_focused))]
+        
+        if (ncol(compound_signatures) >= 1){
+            output = paste0(work_path, 'compound_d_immune_equal_step/', phenotype, '/', method, '/', dataset, '/')
+            if(!dir.exists(output)){
+                dir.create(output)
             }
-            
-            # scale the rank to equal step series
-            twas_sig_gene$twas_rank = rank(twas_sig_gene$twas_rank) / nrow(twas_sig_gene)
-            
-            result = pipeline(twas_sig_gene, compound_signatures, gene_list, method, dataset)
-            print('Computing is over!!!')
-            write.table(result, file = rs_save_path, sep = '\t')
-            print('Computing d is OK!')
+            rs_save_path = paste0(output, '/d_', j, '.txt')
+            if (!file.exists(rs_save_path)){
+                if (dataset %in% datasets$TWAS){
+                    load(paste0(work_path, 'disease_signature/', phenotype, '/processed/twas_', dataset, '_new.Rdata'))
+                    twas_rs = as.data.frame(twas_rs)
+                    
+                    # remove duplicated genes
+                    twas_rs = twas_rs[order(twas_rs$padj), ]
+                    twas_rs = twas_rs[!duplicated(twas_rs$gene), ]
+                    
+                    twas_rs$twas_rank = rank(-twas_rs$zscore) / (nrow(twas_rs)) 
+                    twas_sig_gene = subset(twas_rs, padj < 0.05, select = c('GeneID', 'twas_rank', 'zscore'))
+                } else if (dataset %in% c('ALV', 'EXP', 'BALF')){
+                    ## load dge sig gene list, to reuse twas's code, so named twas_sig_gene
+                    load(paste0(work_path, 'disease_signature/', phenotype, '/processed/dge_', dataset, '_new.Rdata'))
+                    dge_rs = as.data.frame(dge_rs)
+                    
+                    if (dataset == "BALF"){
+                        gene_name_col = 'symbol'
+                        fold_change_col = 'log2FoldChange'
+                    } else{
+                        gene_name_col = 'GeneName'
+                        fold_change_col = 'log2FoldChange'
+                    }
+                    
+                    # remove duplicated genes
+                    dge_rs = dge_rs[order(abs(dge_rs[, fold_change_col]), decreasing = T), ]
+                    dge_rs = dge_rs[!duplicated(dge_rs[, gene_name_col]), ]
+                    
+                    # use up to 50 gene for positive and negative
+                    # positive = dge_rs[which(dge_rs[, fold_change_col]>0), ]
+                    # negative = dge_rs[which(dge_rs[, fold_change_col]<0), ]
+                    # min_size = min(nrow(positive), nrow(negative), 50)
+                    # dge_rs = rbind(positive[1:min_size, ], negative[1:min_size, ])
+                    # dge_rs = dge_rs[1:min(100, nrow(dge_rs)), ]
+                    
+                    twas_sig_gene = subset(dge_rs, select = c('GeneID', 'dge_rank', 'log2FoldChange'))
+                    colnames(twas_sig_gene)[2] = 'twas_rank'
+                } else{
+                    load(paste0(work_path, 'disease_signature/', phenotype, '/processed/dge_', dataset, '_new.Rdata'))
+                    if (dataset == 'islets'){
+                        dge_rs$twas_rank = rank(-as.numeric(dge_rs$`Fold D/N`)) / (nrow(dge_rs)) 
+                        twas_sig_gene = subset(dge_rs, select = c('GeneID', 'twas_rank', 'Fold D/N'))
+                    } else{
+                        dge_rs$twas_rank = rank(-as.numeric(dge_rs$Ratio)) / (nrow(dge_rs)) 
+                        twas_sig_gene = subset(dge_rs, select = c('GeneID', 'twas_rank', 'Ratio'))
+                    }
+                }
+                
+                # scale the rank to equal step series
+                twas_sig_gene$twas_rank = rank(twas_sig_gene$twas_rank) / nrow(twas_sig_gene)
+                colnames(twas_sig_gene)[3] = 'effect'
+                
+                result = pipeline(twas_sig_gene, compound_signatures, gene_list, method, dataset, add_experiment_wise_p)
+                print('Computing is over!!!')
+                write.table(result, file = rs_save_path, sep = '\t')
+                print('Computing d is OK!')
+            }
+        } else{
+            print('There are not focused cell lines in the compound signatures!')
         }
     }
 }
@@ -264,6 +265,7 @@ main_fun = function(args, phenotype_id=1, method_id=1){
 
 ##################################################____run function____##################################################
 args = as.numeric(commandArgs(TRUE))
-main_fun(args, phenotype_id=2, method_id=2)
+main_fun(args, phenotype_id=3, method_id=1)
+
 
 
