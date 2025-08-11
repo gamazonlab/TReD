@@ -22,7 +22,22 @@ spleen: data/disease_signature/Covid19/processed/twas_spleen_new.Rdata
 Adipose_Visceral_Omentum: data/disease_signature/T2D/processed/twas_Adipose_Visceral_Omentum_new.Rdata  
 Muscle_Skeletal: data/disease_signature/T2D/processed/twas_Adipose_Visceral_Omentum_new.Rdata  
 Liver: data/disease_signature/T2D/processed/twas_Adipose_Visceral_Omentum_new.Rdata  
-Pancreas: data/disease_signature/T2D/processed/twas_Adipose_Visceral_Omentum_new.Rdata
+Pancreas: data/disease_signature/T2D/processed/twas_Adipose_Visceral_Omentum_new.Rdata  
+
+3. AD  
+Brain_Amygdala: data/disease_signature/T2D/processed/twas_Brain_Amygdala_new.Rdata  
+Brain_Anterior_cingulate_cortex_BA24: data/disease_signature/T2D/processed/twas_Brain_Anterior_cingulate_cortex_BA24_new.Rdata  
+Brain_Caudate_basal_ganglia: data/disease_signature/T2D/processed/twas_Brain_Caudate_basal_ganglia_new.Rdata  
+Brain_Cerebellar_Hemisphere: data/disease_signature/T2D/processed/twas_Brain_Cerebellar_Hemisphere_new.Rdata  
+Brain_Cerebellum: data/disease_signature/T2D/processed/twas_Brain_Cerebellum_new.Rdata  
+Brain_Cortex: data/disease_signature/T2D/processed/twas_Brain_Cortex_new.Rdata  
+Brain_Frontal_Cortex_BA9: data/disease_signature/T2D/processed/twas_Brain_Frontal_Cortex_BA9_new.Rdata  
+Brain_Hippocampus: data/disease_signature/T2D/processed/twas_Brain_Hippocampus_new.Rdata  
+Brain_Hypothalamus: data/disease_signature/T2D/processed/twas_Brain_Hypothalamus_new.Rdata  
+Brain_Nucleus_accumbens_basal_ganglia: data/disease_signature/T2D/processed/twas_Brain_Nucleus_accumbens_basal_ganglia_new.Rdata  
+Brain_Putamen_basal_ganglia: data/disease_signature/T2D/processed/twas_Brain_Putamen_basal_ganglia_new.Rdata  
+Brain_Spinal_cord_cervical_c-1: data/disease_signature/T2D/processed/twas_Brain_Spinal_cord_cervical_c-1_new.Rdata  
+Brain_Substantia_nigra: data/disease_signature/T2D/processed/twas_Brain_Substantia_nigra_new.Rdata  
 
 ### TWAS Tool
 Predixcan (https://www.nature.com/articles/ng.3367, https://github.com/gamazonlab/MR-JTI/blob/master/model_training/predixcan/)
