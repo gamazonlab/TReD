@@ -1,53 +1,23 @@
 ##################################################____load packages____####################################################
 library(dplyr)
-library(ACAT)
 library(ggplot2)
 library(ggrepel)
 library(readxl)
 
+
 source('~/Rwork/covid19_drug_reposition/functions.R')
 
-##################################################____define function____##################################################
-getFocusedCellLines = function(dataset){
-    focused_cells = c()
-    if (dataset == 'Liver'){
-        focused_cells = c('JHH7', 'SNU761', 'JHH5', 'HUH7', 'HEPG2', 'PHH', 'HUH751')
-    } 
-    
-    if (dataset == 'Adipose_Visceral_Omentum'){
-        focused_cells = c('ASC')
-    }
-    
-    if (dataset == 'Muscle_Skeletal' | dataset == 'myoblasts' | dataset == 'myotubes'){
-        focused_cells = c('A204', 'SKB')
-    }
-    
-    if (dataset == 'Pancreas' | dataset == 'islets'){
-        focused_cells = c('YAPC', 'DANG')
-    }
-    
-    if (dataset %in% c('blood', 'lung', 'lymphocytes', 'spleen', 'ALV', 'EXP', 'BALF')){
-        focused_cells = c(
-            "KMS34", "U266B1", "OCILY3", "U937", "K562", "SUDHL4", "OCILY19", "MINO", "NALM6",
-            "JURKAT", "WSUDLCL2", "OCILY10", "MICROGLIA-PSEN1", "BJAB", "TMD8", "HBL1"
-        )
-    }
-    
-    return(focused_cells)
-}
 
-
-##################################################____do analysis____######################################################
-
-analyze_rs = function(phenotype_id = 1, method_id = 2){
-    phenotype = c('T2D', 'Covid19')[phenotype_id]
-    method = c('TReD', 'cmap_score')[method_id]
-    work_dir = 'your_work_path/covid19_drug_reposition/compound_d_immune_equal_step/'
-    annotation_df = xy_read("~/LINCS2_beta/annotation_df.txt")
-    siginfo_beta = xy_read('your_LINCS_path/siginfo_beta.txt')
+analyze_rs = function(){
+    phenotype = c('T2D', 'Covid19', 'AD')[3]
+    method = c('TReD', 'cmap_score')[1]
+    work_dir = '~/compound_d_immune_equal_step/'
+    annotation_df = xy_read("~/compound_d_immune_equal_step/annotation_df.txt")
+    siginfo_beta = xy_read('/data/LINCS2_beta/siginfo_beta.txt')
     datasets = as.character(unlist(get_run_datasets(phenotype)))
     
     # 'immune' means results of focused cell lines
+    all_focused_cell_line_instances = list()
     all_sub_immune_drug_instances_rs = list()
     all_sub_bind_drug_instances_rs = list()
     all_sub_immune_drug_rs_cell = list()
@@ -84,6 +54,7 @@ analyze_rs = function(phenotype_id = 1, method_id = 2){
         if (!dir.exists(paste0(rs_dir, '/focused_cell_line_drug_instances/'))){
             dir.create(paste0(rs_dir, '/focused_cell_line_drug_instances/'))
         }
+        all_focused_cell_line_instances[[i]] = immune_drug_instances_rs
         write.table(immune_drug_instances_rs, file = paste0(rs_dir, '/focused_cell_line_drug_instances/', dataset, '.csv'), row.names = F, sep = ',')
         print('OK!')
         
@@ -94,9 +65,14 @@ analyze_rs = function(phenotype_id = 1, method_id = 2){
             sub_immune_drug_instances_rs = immune_drug_instances_rs[which(immune_drug_instances_rs$drug_d > (mean(immune_drug_instances_rs$drug_d) + 2*sd(immune_drug_instances_rs$drug_d))), ]
             sub_immune_drug_instances_rs = sub_immune_drug_instances_rs[which(sub_immune_drug_instances_rs$permutation_p < 0.05), ]
         } else{
-            ## subset d<0 & p<0.05
+            library(qvalue)
+            ## adjust_p < 0.05 & d<0
+            immune_drug_instances_rs$adjusted_p = qvalue(immune_drug_instances_rs$permutation_p)$qvalues
             sub_immune_drug_instances_rs = immune_drug_instances_rs[which(immune_drug_instances_rs$drug_d < 0), ]
-            sub_immune_drug_instances_rs = sub_immune_drug_instances_rs[which(sub_immune_drug_instances_rs$permutation_p < 0.05), ]
+            sub_immune_drug_instances_rs = sub_immune_drug_instances_rs[which(sub_immune_drug_instances_rs$adjusted_p < 0.05), ]
+            ## subset score<mean-2sd & p<0.05
+            # sub_immune_drug_instances_rs = immune_drug_instances_rs[which(immune_drug_instances_rs$drug_d < (mean(immune_drug_instances_rs$drug_d) - 2*sd(immune_drug_instances_rs$drug_d))), ]
+            # sub_immune_drug_instances_rs = sub_immune_drug_instances_rs[which(sub_immune_drug_instances_rs$permutation_p < 0.05), ]
         }
         
         print(paste0('OK! No. extracted instances: ', dim(sub_immune_drug_instances_rs)[1]))
@@ -122,7 +98,12 @@ analyze_rs = function(phenotype_id = 1, method_id = 2){
         sub_immune_drug_instances_rs$time_bool = time_bool
         
         # the instance with max reversal distance was select to represent the drug
-        sub_bind_drug_instances_rs = sub_immune_drug_instances_rs %>% group_by(pert_id) %>% dplyr::slice(which.max(drug_d))
+        if (method == 'TReD'){
+            sub_bind_drug_instances_rs = sub_immune_drug_instances_rs %>% group_by(pert_id) %>% dplyr::slice(which.max(drug_d))
+        } else{
+            sub_bind_drug_instances_rs = sub_immune_drug_instances_rs %>% group_by(pert_id) %>% dplyr::slice(which.min(drug_d))
+        }
+        
         sub_immune_drug_rs_cell = sub_immune_drug_instances_rs[sub_immune_drug_instances_rs$cell_bool, ] %>% group_by(pert_id) %>% dplyr::slice(which.max(drug_d)) %>% as.data.frame
         sub_immune_drug_rs_dose = sub_immune_drug_instances_rs[sub_immune_drug_instances_rs$dose_bool, ] %>% group_by(pert_id) %>% dplyr::slice(which.max(drug_d)) %>% as.data.frame
         sub_immune_drug_rs_time = sub_immune_drug_instances_rs[sub_immune_drug_instances_rs$time_bool, ] %>% group_by(pert_id) %>% dplyr::slice(which.max(drug_d)) %>% as.data.frame
@@ -137,18 +118,14 @@ analyze_rs = function(phenotype_id = 1, method_id = 2){
     all_sub_immune_drug_instances_rs = do.call(rbind, all_sub_immune_drug_instances_rs)
     all_sub_bind_drug_instances_rs = do.call(rbind, all_sub_bind_drug_instances_rs)
     all_sub_immune_drug_rs_cell = do.call(rbind, all_sub_immune_drug_rs_cell)
+    all_focused_cell_line_instances = do.call(rbind, all_focused_cell_line_instances)
     
-    # sub_annotation_df = annotation_df[match(unique(all_sub_immune_drug_rs$pert_id), annotation_df$pert_id), ]
-    # the final significant instances must be significant in more than 2 cell lines
     sub_annotation_df_cell = merge(annotation_df, data.frame(pert_id = unique(all_sub_immune_drug_rs_cell$pert_id)), by = 'pert_id')
-    # sub_annotation_df_dose = merge(annotation_df, data.frame(pert_id = unique(all_sub_immune_drug_rs_dose$pert_id)), by = 'pert_id')
-    # sub_annotation_df_time = merge(annotation_df, data.frame(pert_id = unique(all_sub_immune_drug_rs_time$pert_id)), by = 'pert_id')
-    # write.table(sub_annotation_df_cell, file = 'sub_annotation_df_cell.csv', sep = ',', row.names = F)
     write.table(all_sub_immune_drug_instances_rs, file = paste0(rs_dir, '/all_sub_immune_drug_instances_rs.csv'), sep = ',', row.names = F)
     write.table(all_sub_bind_drug_instances_rs, file = paste0(rs_dir, '/all_sub_bind_drug_instances_rs.csv'), sep = ',', row.names = F)
     write.table(all_sub_immune_drug_rs_cell, file = paste0(rs_dir, '/all_sub_immune_drug_rs_cell.csv'), sep = ',', row.names = F)
-    # write.table(all_sub_immune_drug_rs_dose, file = paste0(work_dir, 'all_sub_immune_drug_rs_dose.csv'), sep = ',', row.names = F)
-    # write.table(all_sub_immune_drug_rs_time, file = paste0(work_dir, 'all_sub_immune_drug_rs_time.csv'), sep = ',', row.names = F)
+    write.table(all_focused_cell_line_instances, file = paste0(rs_dir, '/all_focused_cell_line_instances.csv'), sep = ',', row.names = F)
     print('OK!')
 }
 
+                                                
